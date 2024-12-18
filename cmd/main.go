@@ -1,12 +1,39 @@
 package main
 
 import (
-	user_v1 "github.com/laiker/auth/pkg/user_v1"
+	"context"
+	"fmt"
+	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/laiker/auth/pkg/user_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 )
+
+type server struct {
+	user_v1.UnimplementedUserV1Server
+}
+
+func (s *server) Create(ctx context.Context, request *user_v1.CreateRequest) (*user_v1.CreateResponse, error) {
+	fmt.Printf("%+v", request)
+	return &user_v1.CreateResponse{}, nil
+}
+
+func (s *server) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.GetResponse, error) {
+	fmt.Printf("%+v", request)
+	return &user_v1.GetResponse{}, nil
+}
+
+func (s *server) Update(ctx context.Context, request *user_v1.UpdateRequest) (*empty.Empty, error) {
+	fmt.Printf("%+v", request)
+	return &empty.Empty{}, nil
+}
+
+func (s *server) Delete(ctx context.Context, request *user_v1.DeleteRequest) (*empty.Empty, error) {
+	fmt.Printf("%+v", request)
+	return &empty.Empty{}, nil
+}
 
 func main() {
 	listener, err := net.Listen("tcp", ":50052")
@@ -17,28 +44,12 @@ func main() {
 
 	g := grpc.NewServer()
 	reflection.Register(g)
-	user_v1.RegisterNoteV1Server(g, &listener)
+	user_v1.RegisterUserV1Server(g, &server{})
 
 	log.Printf("server listening at %v", listener.Addr())
 
 	if err = g.Serve(listener); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-
-}
-
-func CreateUser() {
-
-}
-
-func GetUser() {
-
-}
-
-func UpdateUser() {
-
-}
-
-func DeleteUser() {
 
 }
