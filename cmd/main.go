@@ -23,7 +23,9 @@ func (s *server) Create(ctx context.Context, request *user_v1.CreateRequest) (*u
 
 func (s *server) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.GetResponse, error) {
 	fmt.Printf("%+v %v", request, ctx)
-	return &user_v1.GetResponse{}, nil
+	return &user_v1.GetResponse{
+		Id: 100,
+	}, nil
 }
 
 func (s *server) Update(ctx context.Context, request *user_v1.UpdateRequest) (*empty.Empty, error) {
