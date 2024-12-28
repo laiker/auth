@@ -45,15 +45,6 @@ message GetResponse {
   google.protobuf.Timestamp updated_at = 6;
 }
 
-message UpdateUserInfo {
-  google.protobuf.StringValue name = 1;
-  google.protobuf.StringValue email = 2;
-  google.protobuf.StringValue author = 3;
-  google.protobuf.BoolValue is_public = 4;
-  google.protobuf.Timestamp created_at = 5;
-  google.protobuf.Timestamp updated_at = 6;
-}
-
 message UpdateRequest {
   google.protobuf.StringValue name = 1;
   google.protobuf.StringValue email = 2;

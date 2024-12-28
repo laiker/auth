@@ -3,8 +3,6 @@ FROM golang:1.22-alpine AS builder
 COPY . /github.com/laiker/auth/
 WORKDIR /github.com/laiker/auth/
 
-RUN ls -la
-RUN pwd
 RUN go mod download
 RUN go build -v -o ./bin/auth ./cmd/main.go
 
