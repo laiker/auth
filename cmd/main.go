@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -32,13 +33,41 @@ type server struct {
 }
 
 func (s *server) Create(ctx context.Context, request *user_v1.CreateRequest) (*user_v1.CreateResponse, error) {
-	fmt.Printf("%+v %v", request, ctx)
-	return &user_v1.CreateResponse{}, nil
+
+	sRole := strconv.Itoa(int(user_v1.Role_value[string(request.Role)]))
+
+	sBuilder := sq.Insert("auth_user").
+		Columns("email", "name", "password", "role").
+		Values(request.Email, request.Name, request.Password, sRole).
+		PlaceholderFormat(sq.Dollar).
+		Suffix("RETURNING id")
+
+	query, args, err := sBuilder.ToSql()
+
+	fmt.Println(query, args)
+
+	if err != nil {
+		log.Fatalf("failed to build query: %v", err)
+	}
+
+	var userID int64
+	err = s.db.QueryRow(ctx, query, args...).Scan(&userID)
+
+	if err != nil {
+		log.Fatalf("failed to insert user: %v", err)
+	}
+
+	return &user_v1.CreateResponse{
+		Id: userID,
+	}, nil
 }
 
 func (s *server) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.GetResponse, error) {
 
-	sBuilder := sq.Select("id", "name", "email", "role", "createdAt", "updatedAt").From("auth_user").Where(sq.Eq{"id": request.Id})
+	sBuilder := sq.Select("id", "name", "email", "role", "created_at", "updated_at").
+		From("auth_user").
+		Where(sq.Eq{"id": request.Id}).
+		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := sBuilder.ToSql()
 
@@ -48,32 +77,74 @@ func (s *server) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1
 
 	var id int64
 	var name, email string
-	var role int
+	var role string
 	var createdAt time.Time
 	var updatedAt sql.NullTime
-	fmt.Println(s.db)
+	fmt.Println(query, args)
 	err = s.db.QueryRow(ctx, query, args...).Scan(&id, &name, &email, &role, &createdAt, &updatedAt)
+
 	if err != nil {
-		log.Fatalf("failed to select notes: %v", err)
+		log.Fatalf("failed to select user: %v", err)
+	}
+
+	srole, err := strconv.Atoi(role)
+
+	if err != nil {
+		log.Fatalf("failed to convert role to int: %v", err)
 	}
 
 	return &user_v1.GetResponse{
 		Id:        id,
 		Name:      name,
 		Email:     email,
-		Role:      user_v1.Role(role),
+		Role:      user_v1.Role(srole),
 		CreatedAt: &timestamp.Timestamp{},
 		UpdatedAt: &timestamp.Timestamp{},
 	}, nil
 }
 
 func (s *server) Update(ctx context.Context, request *user_v1.UpdateRequest) (*empty.Empty, error) {
-	fmt.Printf("%+v %v", request, ctx)
-	return &empty.Empty{}, nil
+
+	sBuilder := sq.Update("auth_user").
+		PlaceholderFormat(sq.Dollar).
+		Set("email", request.Email.GetValue()).
+		Set("name", request.Name.GetValue()).
+		Set("updated_at", time.Now()).
+		Where(sq.Eq{"id": request.Id.GetValue()})
+
+	query, args, err := sBuilder.ToSql()
+
+	fmt.Println(query, args)
+
+	if err != nil {
+		log.Fatalf("failed to build query: %v", err)
+	}
+
+	_, err = s.db.Exec(ctx, query, args...)
+
+	if err != nil {
+		log.Fatalf("failed to update user: %v", err)
+	}
+
+	return nil, nil
 }
 
 func (s *server) Delete(ctx context.Context, request *user_v1.DeleteRequest) (*empty.Empty, error) {
-	fmt.Printf("%+v %v", request, ctx)
+	sBuilder := sq.Delete("auth_user").
+		PlaceholderFormat(sq.Dollar).
+		Where(sq.Eq{"id": request.Id})
+
+	query, args, err := sBuilder.ToSql()
+
+	if err != nil {
+		log.Fatalf("failed to build query: %v", err)
+	}
+
+	_, err = s.db.Exec(ctx, query, args...)
+	if err != nil {
+		log.Fatalf("failed to delete user: %v", err)
+	}
+
 	return &empty.Empty{}, nil
 }
 
@@ -106,6 +177,10 @@ func main() {
 	}
 
 	p, errp := pgxpool.Connect(ctx, pgConfig.DSN())
+
+	if errp != nil {
+		log.Fatalf("failed to connect: %v", errp)
+	}
 
 	g := grpc.NewServer()
 	reflection.Register(g)

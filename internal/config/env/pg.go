@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	dbName = "PG_DATABASE_NAME"
-	dbUser = "PG_USER"
-	dbPass = "PG_PASSWORD"
-	dbPort = "PG_PORT"
+	dbName = "POSTGRES_DB"
+	dbUser = "POSTGRES_USER"
+	dbPass = "POSTGRES_PASSWORD"
+	dbPort = "POSTGRES_PORT"
 )
 
 type PGConfig interface {
@@ -51,5 +51,5 @@ func NewPGConfig() (PGConfig, error) {
 }
 
 func (cfg *pgConfig) DSN() string {
-	return fmt.Sprintf("host=localhost port=%v dbname=%v user=%v password=%v sslmode=disable", cfg.name, cfg.user, cfg.pass, cfg.port)
+	return fmt.Sprintf("postgresql://%v:%v@localhost:%v/%v", cfg.user, cfg.pass, cfg.port, cfg.name)
 }
