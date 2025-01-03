@@ -58,5 +58,5 @@ func NewPGConfig() (PGConfig, error) {
 }
 
 func (cfg *pgConfig) DSN() string {
-	return fmt.Sprintf("postgresql://%v:%v@%v:%v/%v", cfg.user, cfg.host, cfg.pass, cfg.port, cfg.name)
+	return fmt.Sprintf("postgresql://%v:%v@%v:%v/%v", cfg.host, cfg.user, cfg.pass, cfg.port, cfg.name)
 }
