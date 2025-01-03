@@ -37,7 +37,6 @@ jobs:
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> prod.env
 
       - name: Build and Push Docker Image
-        envs: IMAGE_NAME,REGISTRY,GITHUB_SHA,CONTAINER_NAME
         run: |
           TAG_NAME=$(echo $GITHUB_SHA | head -c7)
           echo TAG_NAME
