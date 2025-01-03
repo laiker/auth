@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	dbHost = "POSTGRES_HOST"
 	dbName = "POSTGRES_DB"
 	dbUser = "POSTGRES_USER"
 	dbPass = "POSTGRES_PASSWORD"
@@ -18,6 +19,7 @@ type PGConfig interface {
 }
 
 type pgConfig struct {
+	host string
 	name string
 	user string
 	pass string
@@ -25,6 +27,10 @@ type pgConfig struct {
 }
 
 func NewPGConfig() (PGConfig, error) {
+	host := os.Getenv(dbHost)
+	if len(host) == 0 {
+		return nil, errors.New("pg host not found")
+	}
 	name := os.Getenv(dbName)
 	if len(name) == 0 {
 		return nil, errors.New("pg name not found")
@@ -43,6 +49,7 @@ func NewPGConfig() (PGConfig, error) {
 	}
 
 	return &pgConfig{
+		host: host,
 		name: name,
 		user: user,
 		pass: pass,
@@ -51,5 +58,5 @@ func NewPGConfig() (PGConfig, error) {
 }
 
 func (cfg *pgConfig) DSN() string {
-	return fmt.Sprintf("postgresql://%v:%v@localhost:%v/%v", cfg.user, cfg.pass, cfg.port, cfg.name)
+	return fmt.Sprintf("postgresql://%v:%v@%v:%v/%v", cfg.user, cfg.host, cfg.pass, cfg.port, cfg.name)
 }
