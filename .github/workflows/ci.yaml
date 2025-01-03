@@ -30,7 +30,7 @@ jobs:
           echo "GRPC_HOST=localhost" >> .env
           echo "GRPC_PORT=${{ secrets.SERVER_PORT }}" >> .env
           echo "MIGRATION_DIR=./migrations" >> .env
-          echo "POSTGRES_HOST=localhost" >> .env
+          echo "POSTGRES_HOST=${{ secrets.SERVER_HOST }}" >> .env
           echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env 
           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
