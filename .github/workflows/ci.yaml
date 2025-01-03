@@ -27,7 +27,7 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "GRPC_HOST=${{ secrets.SERVER_HOST }}" >> .env
+          echo "GRPC_HOST=localhost" >> .env
           echo "GRPC_PORT=${{ secrets.SERVER_PORT }}" >> .env
           echo "MIGRATION_DIR=./migrations" >> .env
           echo "POSTGRES_HOST=localhost" >> .env
