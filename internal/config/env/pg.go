@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/laiker/auth/internal/config"
 )
 
 const (
@@ -14,11 +16,9 @@ const (
 	dbPort = "POSTGRES_PORT"
 )
 
-type PGConfig interface {
-	DSN() string
-}
+var _ config.PGConfig = (*Pgconfig)(nil)
 
-type pgConfig struct {
+type Pgconfig struct {
 	host string
 	name string
 	user string
@@ -26,7 +26,7 @@ type pgConfig struct {
 	port string
 }
 
-func NewPGConfig() (PGConfig, error) {
+func NewPGConfig() (*Pgconfig, error) {
 	host := os.Getenv(dbHost)
 	if len(host) == 0 {
 		return nil, errors.New("pg host not found")
@@ -48,7 +48,7 @@ func NewPGConfig() (PGConfig, error) {
 		return nil, errors.New("pg port not found")
 	}
 
-	return &pgConfig{
+	return &Pgconfig{
 		host: host,
 		name: name,
 		user: user,
@@ -57,6 +57,6 @@ func NewPGConfig() (PGConfig, error) {
 	}, nil
 }
 
-func (cfg *pgConfig) DSN() string {
+func (cfg *Pgconfig) DSN() string {
 	return fmt.Sprintf("postgresql://%v:%v@%v:%v/%v", cfg.user, cfg.pass, cfg.host, cfg.port, cfg.name)
 }

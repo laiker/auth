@@ -8,10 +8,12 @@ on:
 
 env:
   REGISTRY: "cr.selcloud.ru/laiker"
-  IMAGE_NAME: "chat-server"
-  CONTAINER_NAME: "chat-server-container"
-  CONTAINER_MIGRATOR_NAME: "migrator-container"
-  IMAGE_MIGRATOR_NAME: "migrator"
+  IMAGE_NAME: "auth-server"
+  CONTAINER_NAME: "auth-server-container"
+  CONTAINER_MIGRATOR_NAME: "auth-migrator-container"
+  IMAGE_MIGRATOR_NAME: "auth-migrator"
+  NETWORK: "auth-network"
+  PORT: "50052"
 
 jobs:
   image-build-and-push:
@@ -61,10 +63,11 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSHKEY }}
-          envs: IMAGE_NAME,REGISTRY,GITHUB_SHA,CONTAINER_NAME,CONTAINER_MIGRATOR_NAME,IMAGE_MIGRATOR_NAME
+          envs: IMAGE_NAME,REGISTRY,GITHUB_SHA,CONTAINER_NAME,CONTAINER_MIGRATOR_NAME,IMAGE_MIGRATOR_NAME,NETWORK,PORT
           script: |
             # Set up variables
             TAG_NAME=$(echo $GITHUB_SHA | head -c7)
+            
             # Login into Selectel Registry
             docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
             
@@ -75,12 +78,12 @@ jobs:
             docker rm $CONTAINER_NAME
             docker rm $CONTAINER_MIGRATOR_NAME
             
-            if [ -z "$(docker network ls -q -f name=auth-network)" ]; then  
-                docker network create auth-network || exit 1  
+            if [ -z "$(docker network ls -q -f name=$NETWORK)" ]; then  
+                docker network create $NETWORK || exit 1  
             fi
             
             # Run a new container from a new image
-            docker run -d --network auth-network -p 50052:50052 --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
+            docker run -d --network $NETWORK -p $PORT:$PORT --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
             
             # Run migrator
-            docker run -d --network auth-network --name $CONTAINER_MIGRATOR_NAME -t $REGISTRY/$IMAGE_MIGRATOR_NAME:$TAG_NAME
+            docker run -d --network $NETWORK --name $CONTAINER_MIGRATOR_NAME -t $REGISTRY/$IMAGE_MIGRATOR_NAME:$TAG_NAME
