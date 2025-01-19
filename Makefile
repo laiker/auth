@@ -46,7 +46,7 @@ local-migration-down:
 
 start:
 	docker-compose up -d pg-local migrator-local
-	go run cmd/main.go --config-path=.local.env
+	go run cmd/main.go
 
 restart:
-	go run cmd/main.go --config-path=.local.env
+	go run cmd/main.go

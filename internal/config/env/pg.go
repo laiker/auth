@@ -26,7 +26,7 @@ type Pgconfig struct {
 	port string
 }
 
-func NewPGConfig() (*Pgconfig, error) {
+func NewPGConfig() (config.PGConfig, error) {
 	host := os.Getenv(dbHost)
 	if len(host) == 0 {
 		return nil, errors.New("pg host not found")
