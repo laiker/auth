@@ -1,14 +1,13 @@
 package user
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/laiker/auth/client/db"
 	"github.com/laiker/auth/internal/model"
 	"github.com/laiker/auth/internal/repository"
 	"github.com/laiker/auth/pkg/user_v1"
@@ -28,14 +27,15 @@ const (
 )
 
 type repo struct {
-	db *pgxpool.Pool
+	db db.Client
 }
 
-func NewRepository(db *pgxpool.Pool) repository.UserRepository {
+func NewRepository(db db.Client) repository.UserRepository {
 	return &repo{db: db}
 }
 
 func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, error) {
+
 	sRole := strconv.Itoa(int(user_v1.Role_value[userInfo.Role]))
 
 	sBuilder := sq.Insert(tableName).
@@ -53,13 +53,19 @@ func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, err
 	}
 
 	var userID int64
-	err = r.db.QueryRow(ctx, query, args...).Scan(&userID)
+
+	q := db.Query{
+		Name:     "user.create",
+		QueryRaw: query,
+	}
+
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&userID)
 
 	if err != nil {
 		log.Println("failed to insert user: %v", err)
 	}
 
-	return 1, nil
+	return userID, nil
 }
 
 func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
@@ -75,32 +81,20 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 		log.Println("failed to build query: %v", err)
 	}
 
-	var idc int64
-	var name, email string
-	var role string
-	var createdAt time.Time
-	var updatedAt sql.NullTime
-	fmt.Println(query, args)
-	err = r.db.QueryRow(ctx, query, args...).Scan(&idc, &name, &email, &role, &createdAt, &updatedAt)
+	q := db.Query{
+		Name:     "user.get",
+		QueryRaw: query,
+	}
+
+	user := model.User{}
+
+	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
 
 	if err != nil {
 		log.Println("failed to select user: %v", err)
 	}
 
-	srole, err := strconv.Atoi(role)
-
-	if err != nil {
-		log.Println("failed to convert role to int: %v", err)
-	}
-
-	return &model.User{
-		Id:        idc,
-		Name:      name,
-		Email:     email,
-		Role:      strconv.Itoa(srole),
-		UpdatedAt: updatedAt,
-		CreatedAt: createdAt,
-	}, nil
+	return &user, nil
 }
 
 func (r *repo) Delete(ctx context.Context, id int64) error {
@@ -115,7 +109,13 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 		log.Println("failed to build query: %v", err)
 	}
 
-	_, err = r.db.Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "user.delete",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
+
 	if err != nil {
 		log.Println("failed to delete user: %v", err)
 	}
@@ -140,7 +140,12 @@ func (r *repo) Update(ctx context.Context, info *model.User) error {
 		log.Println("failed to build query: %v", err)
 	}
 
-	_, err = r.db.Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "user.update",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
 
 	if err != nil {
 		log.Println("failed to update user: %v", err)

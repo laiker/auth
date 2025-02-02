@@ -5,10 +5,13 @@ import (
 	"log"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/laiker/auth/client/db"
+	"github.com/laiker/auth/client/db/pg"
+	"github.com/laiker/auth/client/db/transaction"
 	api "github.com/laiker/auth/internal/api/user"
-	"github.com/laiker/auth/internal/closer"
 	"github.com/laiker/auth/internal/config"
 	"github.com/laiker/auth/internal/config/env"
+	"github.com/laiker/auth/internal/logger/logger"
 	"github.com/laiker/auth/internal/repository"
 	repo "github.com/laiker/auth/internal/repository/user"
 	"github.com/laiker/auth/internal/service"
@@ -22,6 +25,9 @@ type ServiceProvider struct {
 	userRepository repository.UserRepository
 	userService    service.UserService
 	userApi        *api.Server
+	db             db.Client
+	txManager      db.TxManager
+	dbLogger       *logger.DBLogger
 }
 
 func newServiceProvider() *ServiceProvider {
@@ -59,30 +65,30 @@ func (s *ServiceProvider) GRPCConfig() config.GRPCConfig {
 	return s.grpcConfig
 }
 
-func (s *ServiceProvider) PGPool(ctx context.Context) *pgxpool.Pool {
-
-	if s.pgPool == nil {
-		p, err := pgxpool.Connect(ctx, s.PGConfig().DSN())
-
+func (s *ServiceProvider) DB(ctx context.Context) db.Client {
+	if s.db == nil {
+		p, err := pg.New(ctx, s.PGConfig().DSN())
 		if err != nil {
 			log.Fatalf("failed to connect: %v", err)
 		}
 
-		s.pgPool = p
+		s.db = p
+	}
+	return s.db
+}
 
-		closer.Add(func() error {
-			s.pgPool.Close()
-			return nil
-		})
+func (s *ServiceProvider) TxManager(ctx context.Context) db.TxManager {
+	if s.txManager == nil {
+		s.txManager = transaction.NewTransactionManager(s.DB(ctx).DB())
 	}
 
-	return s.pgPool
+	return s.txManager
 }
 
 func (s *ServiceProvider) UserRepository(ctx context.Context) repository.UserRepository {
 
 	if s.userRepository == nil {
-		r := repo.NewRepository(s.PGPool(ctx))
+		r := repo.NewRepository(s.DB(ctx))
 		s.userRepository = r
 	}
 
@@ -91,7 +97,7 @@ func (s *ServiceProvider) UserRepository(ctx context.Context) repository.UserRep
 
 func (s *ServiceProvider) UserService(ctx context.Context) service.UserService {
 	if s.userService == nil {
-		r := serv.NewService(s.UserRepository(ctx))
+		r := serv.NewService(s.UserRepository(ctx), s.TxManager(ctx), *s.DBLogger(ctx))
 		s.userService = r
 	}
 
@@ -105,4 +111,13 @@ func (s *ServiceProvider) UserApi(ctx context.Context) *api.Server {
 	}
 
 	return s.userApi
+}
+
+func (s *ServiceProvider) DBLogger(ctx context.Context) *logger.DBLogger {
+	if s.dbLogger == nil {
+		l := logger.NewDBLogger(s.DB(ctx))
+		s.dbLogger = l
+	}
+
+	return s.dbLogger
 }
