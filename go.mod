@@ -4,11 +4,13 @@ go 1.22
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/brianvoe/gofakeit v3.18.0+incompatible
 	github.com/georgysavva/scany v1.2.2
 	github.com/golang/protobuf v1.5.4
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/joho/godotenv v1.5.1
+	github.com/ovechkin-dm/mockio v1.0.2
 	github.com/pkg/errors v0.9.1
 	google.golang.org/grpc v1.69.2
 	google.golang.org/protobuf v1.36.0
@@ -24,6 +26,9 @@ require (
 	github.com/jackc/puddle v1.3.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+	github.com/ovechkin-dm/go-dyno v0.3.2 // indirect
+	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 )
 

@@ -12,6 +12,10 @@ import (
 
 var _ logger.BaseLogger = (*DBLogger)(nil)
 
+type DBLoggerInterface interface {
+	logger.BaseLogger
+}
+
 type DBLogger struct {
 	db db.Client
 }
