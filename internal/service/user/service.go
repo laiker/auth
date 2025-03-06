@@ -22,12 +22,14 @@ func NewService(repo repository.UserRepository, manager db.TxManager, logger log
 
 func (s *serv) Create(ctx context.Context, userInfo *model.UserInfo) (int64, error) {
 
-	id, err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) (int64, error) {
-		var id int64
+	var id int64
+
+	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
+
 		var errTx error
 		id, errTx = s.repo.Create(ctx, userInfo)
 		if errTx != nil {
-			return int64(0), errTx
+			return errTx
 		}
 
 		logData := log.LogData{
@@ -38,14 +40,14 @@ func (s *serv) Create(ctx context.Context, userInfo *model.UserInfo) (int64, err
 		errTx = s.logger.Log(ctx, logData)
 
 		if errTx != nil {
-			return int64(0), errTx
+			return errTx
 		}
 
-		return id, nil
+		return nil
 	})
 
 	if err != nil {
-		return int64(0), err
+		return 0, err
 	}
 
 	return id, nil

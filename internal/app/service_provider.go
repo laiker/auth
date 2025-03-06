@@ -28,6 +28,7 @@ type ServiceProvider struct {
 	db             db.Client
 	txManager      db.TxManager
 	dbLogger       *logger.DBLogger
+	httpConfig     config.HTTPConfig
 }
 
 func newServiceProvider() *ServiceProvider {
@@ -65,6 +66,22 @@ func (s *ServiceProvider) GRPCConfig() config.GRPCConfig {
 	return s.grpcConfig
 }
 
+func (s *ServiceProvider) HTTPConfig() config.HTTPConfig {
+	if s.httpConfig == nil {
+
+		hConfig, err := env.NewHTTPConfig()
+
+		if err != nil {
+			log.Fatalf("failed to load config: %v", err)
+		}
+
+		s.httpConfig = hConfig
+
+	}
+
+	return s.httpConfig
+}
+
 func (s *ServiceProvider) DB(ctx context.Context) db.Client {
 	if s.db == nil {
 		p, err := pg.New(ctx, s.PGConfig().DSN())
@@ -97,7 +114,7 @@ func (s *ServiceProvider) UserRepository(ctx context.Context) repository.UserRep
 
 func (s *ServiceProvider) UserService(ctx context.Context) service.UserService {
 	if s.userService == nil {
-		r := serv.NewService(s.UserRepository(ctx), s.TxManager(ctx), *s.DBLogger(ctx))
+		r := serv.NewService(s.UserRepository(ctx), s.TxManager(ctx), s.DBLogger(ctx))
 		s.userService = r
 	}
 

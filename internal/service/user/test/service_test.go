@@ -2,7 +2,6 @@ package test
 
 import (
 	"database/sql"
-	"fmt"
 	"testing"
 	"time"
 
@@ -113,7 +112,6 @@ func Test_serv_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := serv.NewService(tt.fields.repo, tt.fields.txManager, tt.fields.logger)
 			got, err := s.Create(tt.args.ctx, tt.args.userInfo)
-			fmt.Println(got, err)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Create() error = %v, wantErr %v", err, tt.wantErr)
 				return
