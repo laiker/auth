@@ -29,6 +29,7 @@ type ServiceProvider struct {
 	txManager      db.TxManager
 	dbLogger       *logger.DBLogger
 	httpConfig     config.HTTPConfig
+	swaggerConfig  config.SwaggerConfig
 }
 
 func newServiceProvider() *ServiceProvider {
@@ -80,6 +81,22 @@ func (s *ServiceProvider) HTTPConfig() config.HTTPConfig {
 	}
 
 	return s.httpConfig
+}
+
+func (s *ServiceProvider) SwaggerConfig() config.HTTPConfig {
+	if s.swaggerConfig == nil {
+
+		sConfig, err := env.NewSwaggerConfig()
+
+		if err != nil {
+			log.Fatalf("failed to load config: %v", err)
+		}
+
+		s.swaggerConfig = sConfig
+
+	}
+
+	return s.swaggerConfig
 }
 
 func (s *ServiceProvider) DB(ctx context.Context) db.Client {
