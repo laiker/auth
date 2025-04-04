@@ -11,7 +11,7 @@ type HandlerFn interface {
 	Handler
 }
 
-type Handler func(ctx context.Context) error
+type Handler func(ctx context.Context) (int64, error)
 
 type Client interface {
 	DB() DB
@@ -19,7 +19,7 @@ type Client interface {
 }
 
 type TxManager interface {
-	ReadCommitted(ctx context.Context, f Handler) error
+	ReadCommitted(ctx context.Context, f Handler) (int64, error)
 }
 
 type Query struct {
