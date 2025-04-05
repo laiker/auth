@@ -7,11 +7,12 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+/* HandlerFn using for transactions */
 type HandlerFn interface {
 	Handler
 }
 
-type Handler func(ctx context.Context) (int64, error)
+type Handler func(ctx context.Context) error
 
 type Client interface {
 	DB() DB
@@ -19,7 +20,7 @@ type Client interface {
 }
 
 type TxManager interface {
-	ReadCommitted(ctx context.Context, f Handler) (int64, error)
+	ReadCommitted(ctx context.Context, f Handler) error
 }
 
 type Query struct {

@@ -49,7 +49,7 @@ func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, err
 	fmt.Println(query, args)
 
 	if err != nil {
-		log.Println("failed to build query: %v", err)
+		log.Printf("failed to build query: %v\n", err)
 	}
 
 	var userID int64
@@ -62,7 +62,7 @@ func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, err
 	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&userID)
 
 	if err != nil {
-		log.Println("failed to insert user: %v", err)
+		log.Printf("failed to insert user: %v\n", err)
 	}
 
 	return userID, nil
@@ -78,7 +78,7 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	query, args, err := sBuilder.ToSql()
 
 	if err != nil {
-		log.Println("failed to build query: %v", err)
+		log.Printf("failed to build query: %v\n", err)
 	}
 
 	q := db.Query{
@@ -91,7 +91,7 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
 
 	if err != nil {
-		log.Println("failed to select user: %v", err)
+		log.Printf("failed to select user: %v\n", err)
 	}
 
 	return &user, nil
@@ -106,7 +106,7 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 	query, args, err := sBuilder.ToSql()
 
 	if err != nil {
-		log.Println("failed to build query: %v", err)
+		log.Printf("failed to build query: %v\n", err)
 	}
 
 	q := db.Query{
@@ -117,7 +117,7 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 	_, err = r.db.DB().ExecContext(ctx, q, args...)
 
 	if err != nil {
-		log.Println("failed to delete user: %v", err)
+		log.Printf("failed to delete user: %v\n", err)
 	}
 
 	return nil
@@ -137,7 +137,7 @@ func (r *repo) Update(ctx context.Context, info *model.User) error {
 	fmt.Println(query, args)
 
 	if err != nil {
-		log.Println("failed to build query: %v", err)
+		log.Printf("failed to build query: %v\n", err)
 	}
 
 	q := db.Query{
@@ -148,7 +148,7 @@ func (r *repo) Update(ctx context.Context, info *model.User) error {
 	_, err = r.db.DB().ExecContext(ctx, q, args...)
 
 	if err != nil {
-		log.Println("failed to update user: %v", err)
+		log.Printf("failed to update user: %v\n", err)
 	}
 
 	return nil

@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/laiker/auth/client/db"
 	"github.com/laiker/auth/client/db/pg"
 	"github.com/laiker/auth/client/db/transaction"
@@ -21,7 +20,6 @@ import (
 type ServiceProvider struct {
 	pgConfig       config.PGConfig
 	grpcConfig     config.GRPCConfig
-	pgPool         *pgxpool.Pool
 	userRepository repository.UserRepository
 	userService    service.UserService
 	userApi        *api.Server
