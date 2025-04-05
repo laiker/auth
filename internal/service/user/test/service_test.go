@@ -62,13 +62,13 @@ func Test_serv_Create(t *testing.T) {
 	When(deps.loggerMock.Log(deps.contextMock, ld)).ThenReturn(nil)
 
 	callback := func(args []any) []any {
-		fn := args[1].(func(context.Context) (int64, error))
-		id, err := fn(deps.contextMock)
-		return []any{id, err}
+		fn := args[1].(func(context.Context) error)
+		err := fn(deps.contextMock)
+		return []any{err}
 	}
 
 	When(deps.txManagerMock.ReadCommitted(Any[context.Context](), Any[db.Handler]())).
-		ThenReturn(int64(1), nil).
+		ThenReturn(nil).
 		ThenAnswer(callback)
 
 	pw := gofakeit.Password(true, true, true, true, true, 10)
@@ -111,15 +111,11 @@ func Test_serv_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := serv.NewService(tt.fields.repo, tt.fields.txManager, tt.fields.logger)
-			got, err := s.Create(tt.args.ctx, tt.args.userInfo)
+			_, err := s.Create(tt.args.ctx, tt.args.userInfo)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Create() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("Create() got = %v, want %v", got, tt.want)
-			}
-
 		})
 	}
 
