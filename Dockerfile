@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 COPY . /github.com/laiker/auth/
 WORKDIR /github.com/laiker/auth/
