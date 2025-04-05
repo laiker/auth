@@ -6,7 +6,7 @@ LOCAL_MIGRATION_DSN="host=$(POSTGRES_HOST) port=$(POSTGRES_PORT) dbname=$(POSTGR
 GOBIN=$(LOCAL_BIN)
 
 install-golangci-lint:
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.0.2
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v1.64.8
 
 lint:
 	$(LOCAL_BIN)/golangci-lint run ./... --config .golangci.pipeline.yaml
