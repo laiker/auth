@@ -41,6 +41,8 @@ jobs:
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "SWAGGER_HOST=${{ secrets.SWAGGER_HOST }}" >> .env
           echo "SWAGGER_PORT=${{ secrets.SWAGGER_PORT }}" >> .env
+          echo "HTTP_HOST=${{ secrets.HTTP_HOST }}" >> .env
+          echo "HTTP_PORT=${{ secrets.HTTP_PORT }}" >> .env
 
       - name: Build and Push Docker Image
         run: |
