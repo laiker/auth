@@ -46,8 +46,8 @@ jobs:
 
       - name: Create tls cerificates
         run: |
-          echo ${{ secrets.SERVICE_KEY }} >> .service.key
-          echo ${{ secrets.SERVICE_PEM }} >> .service.pem
+          echo ${{ secrets.SERVICE_KEY }} >> service.key
+          echo ${{ secrets.SERVICE_PEM }} >> service.pem
 
       - name: Build and Push Docker Image
         run: |
