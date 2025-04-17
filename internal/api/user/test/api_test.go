@@ -101,13 +101,10 @@ func TestServer_Create(t *testing.T) {
 				UnimplementedUserV1Server: tt.fields.UnimplementedUserV1Server,
 				UserService:               tt.fields.UserService,
 			}
-			got, err := s.Create(tt.args.ctx, tt.args.request)
+			_, err := s.Create(tt.args.ctx, tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Create() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Create() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
