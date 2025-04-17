@@ -9,7 +9,7 @@ import (
 type UserInfo struct {
 	Name     string
 	Email    string
-	Role     string
+	Role     int
 	Password string
 }
 
@@ -18,6 +18,7 @@ type User struct {
 	Name      string
 	Email     string
 	Role      string
+	Password  string
 	UpdatedAt sql.NullTime
 	CreatedAt time.Time
 }

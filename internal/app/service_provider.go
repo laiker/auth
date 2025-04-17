@@ -7,27 +7,47 @@ import (
 	"github.com/laiker/auth/client/db"
 	"github.com/laiker/auth/client/db/pg"
 	"github.com/laiker/auth/client/db/transaction"
-	api "github.com/laiker/auth/internal/api/user"
+	accessApi "github.com/laiker/auth/internal/api/access"
+	authApi "github.com/laiker/auth/internal/api/auth"
+	userApi "github.com/laiker/auth/internal/api/user"
 	"github.com/laiker/auth/internal/config"
 	"github.com/laiker/auth/internal/config/env"
 	"github.com/laiker/auth/internal/logger/logger"
 	"github.com/laiker/auth/internal/repository"
+	accessRepository "github.com/laiker/auth/internal/repository/access"
 	repo "github.com/laiker/auth/internal/repository/user"
 	"github.com/laiker/auth/internal/service"
+	accessService "github.com/laiker/auth/internal/service/access"
+	authService "github.com/laiker/auth/internal/service/auth"
 	serv "github.com/laiker/auth/internal/service/user"
 )
 
 type ServiceProvider struct {
-	pgConfig       config.PGConfig
-	grpcConfig     config.GRPCConfig
-	userRepository repository.UserRepository
+	//Configs
+	pgConfig      config.PGConfig
+	grpcConfig    config.GRPCConfig
+	jwtConfig     config.JwtConfig
+	httpConfig    config.HTTPConfig
+	swaggerConfig config.SwaggerConfig
+
+	//User
+	userApi        *userApi.ServerUser
 	userService    service.UserService
-	userApi        *api.Server
-	db             db.Client
-	txManager      db.TxManager
-	dbLogger       *logger.DBLogger
-	httpConfig     config.HTTPConfig
-	swaggerConfig  config.SwaggerConfig
+	userRepository repository.UserRepository
+
+	//Auth
+	authApi     *authApi.ServerAuth
+	authService service.AuthService
+
+	//Access
+	accessApi        *accessApi.ServerAccess
+	accessService    service.AccessService
+	accessRepository repository.AccessRepository
+
+	//Database
+	db        db.Client
+	txManager db.TxManager
+	dbLogger  *logger.DBLogger
 }
 
 func newServiceProvider() *ServiceProvider {
@@ -136,13 +156,78 @@ func (s *ServiceProvider) UserService(ctx context.Context) service.UserService {
 	return s.userService
 }
 
-func (s *ServiceProvider) UserApi(ctx context.Context) *api.Server {
+func (s *ServiceProvider) AuthService(ctx context.Context) service.AuthService {
+	if s.authService == nil {
+		r := authService.NewService(s.JwtConfig())
+		s.authService = r
+	}
+
+	return s.authService
+}
+
+func (s *ServiceProvider) UserApi(ctx context.Context) *userApi.ServerUser {
 	if s.userApi == nil {
-		a := api.NewServer(s.UserService(ctx))
+		a := userApi.NewUserServer(s.UserService(ctx))
 		s.userApi = a
 	}
 
 	return s.userApi
+}
+
+func (s *ServiceProvider) AccessApi(ctx context.Context) *accessApi.ServerAccess {
+	if s.accessApi == nil {
+		a := accessApi.NewAccessServer(s.AuthService(ctx), s.AccessService(ctx))
+		s.accessApi = a
+	}
+
+	return s.accessApi
+}
+
+func (s *ServiceProvider) AccessService(ctx context.Context) service.AccessService {
+	if s.accessService == nil {
+		r := accessService.NewService(s.AccessRepository(ctx))
+		s.accessService = r
+	}
+
+	return s.accessService
+}
+
+func (s *ServiceProvider) AccessRepository(ctx context.Context) repository.AccessRepository {
+
+	if s.accessRepository == nil {
+		r := accessRepository.NewRepository(s.DB(ctx))
+		s.accessRepository = r
+	}
+
+	return s.accessRepository
+}
+
+func (s *ServiceProvider) JwtConfig() config.JwtConfig {
+	if s.jwtConfig == nil {
+
+		jwtConfig, err := env.NewJwtConfig()
+
+		if err != nil {
+			log.Fatalf("failed to load config: %v", err)
+		}
+
+		s.jwtConfig = jwtConfig
+
+	}
+
+	return s.jwtConfig
+}
+
+func (s *ServiceProvider) AuthApi(ctx context.Context) *authApi.ServerAuth {
+	if s.authApi == nil {
+		a := authApi.NewAuthServer(
+			s.AuthService(ctx),
+			s.UserService(ctx),
+		)
+		s.authApi = a
+	}
+
+	return s.authApi
 }
 
 func (s *ServiceProvider) DBLogger(ctx context.Context) *logger.DBLogger {

@@ -4,3 +4,8 @@
 .prod.env
 .env
 vendor.protogen
+*.cert
+*.key
+*.pem
+*.csr
+certificate.conf

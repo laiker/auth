@@ -68,7 +68,7 @@ func TestServer_Create(t *testing.T) {
 	mi := &model.UserInfo{
 		Name:     name,
 		Email:    email,
-		Role:     "USER",
+		Role:     0,
 		Password: pw,
 	}
 
@@ -97,7 +97,7 @@ func TestServer_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &user.Server{
+			s := &user.ServerUser{
 				UnimplementedUserV1Server: tt.fields.UnimplementedUserV1Server,
 				UserService:               tt.fields.UserService,
 			}
@@ -151,7 +151,7 @@ func TestServer_Delete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &user.Server{
+			s := &user.ServerUser{
 				UnimplementedUserV1Server: tt.fields.UnimplementedUserV1Server,
 				UserService:               tt.fields.UserService,
 			}
@@ -230,7 +230,7 @@ func TestServer_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			s := &user.Server{
+			s := &user.ServerUser{
 				UnimplementedUserV1Server: tt.fields.UnimplementedUserV1Server,
 				UserService:               tt.fields.UserService,
 			}
@@ -299,7 +299,7 @@ func TestServer_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &user.Server{
+			s := &user.ServerUser{
 				UnimplementedUserV1Server: tt.fields.UnimplementedUserV1Server,
 				UserService:               tt.fields.UserService,
 			}

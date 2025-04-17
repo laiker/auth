@@ -6,10 +6,21 @@ import (
 )
 
 func ToUserFromCreateRequest(user *user_v1.CreateRequest) *model.UserInfo {
+
+	var role int
+
+	switch user.Role.Number() {
+	case 1:
+		role = 2
+		break
+	default:
+		role = 1
+	}
+
 	return &model.UserInfo{
 		Name:     user.GetName(),
 		Email:    user.GetEmail(),
-		Role:     user.GetRole().String(),
+		Role:     role,
 		Password: user.GetPassword(),
 	}
 }

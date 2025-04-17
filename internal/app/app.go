@@ -13,12 +13,14 @@ import (
 	"github.com/laiker/auth/internal/closer"
 	"github.com/laiker/auth/internal/config"
 	"github.com/laiker/auth/internal/interceptor"
+	"github.com/laiker/auth/pkg/access_v1"
+	"github.com/laiker/auth/pkg/auth_v1"
 	"github.com/laiker/auth/pkg/user_v1"
 	_ "github.com/laiker/auth/statik"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -115,14 +117,24 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
+
+	crds, err := credentials.NewServerTLSFromFile("service.pem", "service.key")
+
+	if err != nil {
+		log.Fatalf("Failed to generate credentials %v", err)
+		return nil
+	}
+
 	a.grpcServer = grpc.NewServer(
-		grpc.Creds(insecure.NewCredentials()),
+		grpc.Creds(crds),
 		grpc.UnaryInterceptor(interceptor.ValidateInterceptor()),
 	)
 
 	reflection.Register(a.grpcServer)
 
 	user_v1.RegisterUserV1Server(a.grpcServer, a.serviceProvider.UserApi(ctx))
+	auth_v1.RegisterAuthV1Server(a.grpcServer, a.serviceProvider.AuthApi(ctx))
+	access_v1.RegisterAccessV1Server(a.grpcServer, a.serviceProvider.AccessApi(ctx))
 
 	return nil
 }
@@ -130,11 +142,18 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 func (a *App) initHTTPServer(ctx context.Context) error {
 	mux := runtime.NewServeMux()
 
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	crds, err := credentials.NewClientTLSFromFile("service.pem", "localhost")
+
+	if err != nil {
+		log.Fatalf("Failed to generate credentials %v", err)
+		return nil
 	}
 
-	err := user_v1.RegisterUserV1HandlerFromEndpoint(ctx, mux, a.serviceProvider.GRPCConfig().Address(), opts)
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(crds),
+	}
+
+	err = user_v1.RegisterUserV1HandlerFromEndpoint(ctx, mux, a.serviceProvider.GRPCConfig().Address(), opts)
 	if err != nil {
 		return err
 	}

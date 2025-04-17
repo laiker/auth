@@ -12,18 +12,18 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type Server struct {
+type ServerUser struct {
 	user_v1.UnimplementedUserV1Server
 	UserService service.UserService
 }
 
-func NewServer(userService service.UserService) *Server {
-	return &Server{
+func NewUserServer(userService service.UserService) *ServerUser {
+	return &ServerUser{
 		UserService: userService,
 	}
 }
 
-func (s *Server) Create(ctx context.Context, request *user_v1.CreateRequest) (*user_v1.CreateResponse, error) {
+func (s *ServerUser) Create(ctx context.Context, request *user_v1.CreateRequest) (*user_v1.CreateResponse, error) {
 
 	userID, err := s.UserService.Create(ctx, converter.ToUserFromCreateRequest(request))
 
@@ -36,7 +36,7 @@ func (s *Server) Create(ctx context.Context, request *user_v1.CreateRequest) (*u
 	}, nil
 }
 
-func (s *Server) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.GetResponse, error) {
+func (s *ServerUser) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.GetResponse, error) {
 
 	user, err := s.UserService.Get(ctx, request.Id)
 	fmt.Println(user, err)
@@ -54,7 +54,7 @@ func (s *Server) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1
 	}, nil
 }
 
-func (s *Server) Update(ctx context.Context, request *user_v1.UpdateRequest) (*empty.Empty, error) {
+func (s *ServerUser) Update(ctx context.Context, request *user_v1.UpdateRequest) (*empty.Empty, error) {
 
 	err := s.UserService.Update(ctx, converter.ToUserFromUpdateRequest(request))
 
@@ -65,7 +65,7 @@ func (s *Server) Update(ctx context.Context, request *user_v1.UpdateRequest) (*e
 	return nil, nil
 }
 
-func (s *Server) Delete(ctx context.Context, request *user_v1.DeleteRequest) (*empty.Empty, error) {
+func (s *ServerUser) Delete(ctx context.Context, request *user_v1.DeleteRequest) (*empty.Empty, error) {
 
 	err := s.UserService.Delete(ctx, request.GetId())
 

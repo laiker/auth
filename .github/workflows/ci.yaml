@@ -44,6 +44,11 @@ jobs:
           echo "HTTP_HOST=${{ secrets.HTTP_HOST }}" >> .env
           echo "HTTP_PORT=${{ secrets.HTTP_PORT }}" >> .env
 
+      - name: Create tls cerificates
+        run: |
+          echo ${{ secrets.SERVICE_KEY }} >> .service.key
+          echo ${{ secrets.SERVICE_PEM }} >> .service.pem
+
       - name: Build and Push Docker Image
         run: |
           TAG_NAME=$(echo $GITHUB_SHA | head -c7)

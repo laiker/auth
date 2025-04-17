@@ -7,6 +7,7 @@ import (
 	"github.com/laiker/auth/internal/model"
 	"github.com/laiker/auth/internal/repository"
 	"github.com/laiker/auth/internal/service"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
 )
 
@@ -22,9 +23,18 @@ func NewService(repo repository.UserRepository, manager db.TxManager, logger log
 
 func (s *serv) Create(ctx context.Context, userInfo *model.UserInfo) (int64, error) {
 	var id int64
-	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
 
-		id, errTx := s.repo.Create(ctx, userInfo)
+	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
+		var errTx error
+		pw, err := bcrypt.GenerateFromPassword([]byte(userInfo.Password), bcrypt.DefaultCost)
+
+		if err != nil {
+			return err
+		}
+
+		userInfo.Password = string(pw)
+
+		id, errTx = s.repo.Create(ctx, userInfo)
 
 		if errTx != nil {
 			return errTx
@@ -53,6 +63,10 @@ func (s *serv) Create(ctx context.Context, userInfo *model.UserInfo) (int64, err
 
 func (s *serv) Get(ctx context.Context, id int64) (*model.User, error) {
 	return s.repo.Get(ctx, id)
+}
+
+func (s *serv) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	return s.repo.GetByEmail(ctx, email)
 }
 
 func (s *serv) Delete(ctx context.Context, id int64) error {

@@ -3,14 +3,12 @@ package user
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/laiker/auth/client/db"
 	"github.com/laiker/auth/internal/model"
 	"github.com/laiker/auth/internal/repository"
-	"github.com/laiker/auth/pkg/user_v1"
 	"golang.org/x/net/context"
 )
 
@@ -20,7 +18,7 @@ const (
 	idColumn        = "id"
 	nameColumn      = "name"
 	passwordColumn  = "password"
-	roleColumn      = "role"
+	roleColumn      = "role_id"
 	emailColumn     = "email"
 	createdAtColumn = "created_at"
 	updatedAtColumn = "updated_at"
@@ -36,11 +34,9 @@ func NewRepository(db db.Client) repository.UserRepository {
 
 func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, error) {
 
-	sRole := strconv.Itoa(int(user_v1.Role_value[userInfo.Role]))
-
 	sBuilder := sq.Insert(tableName).
 		Columns(emailColumn, nameColumn, passwordColumn, roleColumn).
-		Values(userInfo.Email, userInfo.Name, userInfo.Password, sRole).
+		Values(userInfo.Email, userInfo.Name, userInfo.Password, userInfo.Role).
 		PlaceholderFormat(sq.Dollar).
 		Suffix("RETURNING id")
 
@@ -92,6 +88,38 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 
 	if err != nil {
 		log.Printf("failed to select user: %v\n", err)
+	}
+
+	return &user, nil
+}
+
+func (r *repo) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+
+	sBuilder := sq.Select(idColumn, nameColumn, emailColumn, "role_name as role", passwordColumn).
+		From(tableName).
+		Where(sq.Eq{emailColumn: email}).
+		Join("user_role on auth_user.role_id = user_role.role_id").
+		PlaceholderFormat(sq.Dollar)
+
+	query, args, err := sBuilder.ToSql()
+
+	if err != nil {
+		log.Printf("failed to build query: %v\n", err)
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "user.getByEmail",
+		QueryRaw: query,
+	}
+
+	user := model.User{}
+
+	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
+
+	if err != nil {
+		log.Printf("failed to select user: %v\n", err)
+		return nil, err
 	}
 
 	return &user, nil

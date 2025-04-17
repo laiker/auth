@@ -22,6 +22,11 @@ type SwaggerConfig interface {
 	Address() string
 }
 
+type JwtConfig interface {
+	GetAccessSecret() string
+	GetRefreshSecret() string
+}
+
 func Load(path string) error {
 	err := godotenv.Load(path)
 	if err != nil {

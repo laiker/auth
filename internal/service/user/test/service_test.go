@@ -78,7 +78,7 @@ func Test_serv_Create(t *testing.T) {
 	mi := &model.UserInfo{
 		Name:     name,
 		Email:    email,
-		Role:     "USER",
+		Role:     0,
 		Password: pw,
 	}
 
