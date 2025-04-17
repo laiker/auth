@@ -44,10 +44,12 @@ jobs:
           echo "HTTP_HOST=${{ secrets.HTTP_HOST }}" >> .env
           echo "HTTP_PORT=${{ secrets.HTTP_PORT }}" >> .env
 
-      - name: Create tls cerificates
+      - name: Create TLS certificates
         run: |
-          echo "${{ secrets.SERVICE_KEY }}" >> service.key
-          echo "${{ secrets.SERVICE_PEM }}" >> service.pem
+          echo "${{ secrets.SERVICE_KEY }}" | base64 -d > service.key
+          echo "${{ secrets.SERVICE_PEM }}" | base64 -d > service.pem
+          ls -la service.*
+          chmod 600 service.key
 
       - name: Build and Push Docker Image
         run: |
