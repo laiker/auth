@@ -10,6 +10,8 @@ FROM alpine:latest
 WORKDIR /root/
 
 COPY --from=builder /github.com/laiker/auth/.env .
+COPY --from=builder /github.com/laiker/auth/service.key .
+COPY --from=builder /github.com/laiker/auth/service.pem .
 COPY --from=builder /github.com/laiker/auth/bin/auth .
 
 CMD ["./auth"]
