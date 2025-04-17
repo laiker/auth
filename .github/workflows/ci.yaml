@@ -46,8 +46,8 @@ jobs:
 
       - name: Create TLS certificates
         run: |
-          echo "${{ secrets.SERVICE_KEY }}" | base64 -d > service.key
-          echo "${{ secrets.SERVICE_PEM }}" | base64 -d > service.pem
+          echo "${{ secrets.SERVICE_KEY }}" > service.key
+          echo "${{ secrets.SERVICE_PEM }}" > service.pem
           ls -la service.*
           chmod 600 service.key
 
