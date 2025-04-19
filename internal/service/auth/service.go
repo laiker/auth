@@ -10,6 +10,9 @@ import (
 	"golang.org/x/net/context"
 )
 
+const JwtAccessExpireTime = 24 * time.Hour
+const JwtRefreshExpireTime = 30 * 24 * time.Hour
+
 type authService struct {
 	jwtConfig config.JwtConfig
 }
@@ -21,7 +24,7 @@ func NewService(config config.JwtConfig) service.AuthService {
 }
 
 func (s *authService) GetAccessToken(ctx context.Context, claims model.UserJwt) (string, error) {
-	token, err := utils.GenerateToken(claims, []byte(s.jwtConfig.GetAccessSecret()), 30*time.Second)
+	token, err := utils.GenerateToken(claims, []byte(s.jwtConfig.GetAccessSecret()), JwtAccessExpireTime)
 
 	if err != nil {
 		return "", err
@@ -31,7 +34,7 @@ func (s *authService) GetAccessToken(ctx context.Context, claims model.UserJwt) 
 }
 
 func (s *authService) GetRefreshToken(ctx context.Context, claims model.UserJwt) (string, error) {
-	token, err := utils.GenerateToken(claims, []byte(s.jwtConfig.GetRefreshSecret()), 60*time.Second)
+	token, err := utils.GenerateToken(claims, []byte(s.jwtConfig.GetRefreshSecret()), JwtRefreshExpireTime)
 
 	if err != nil {
 		return "", err
