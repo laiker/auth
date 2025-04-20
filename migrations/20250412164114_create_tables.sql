@@ -5,13 +5,6 @@ CREATE TABLE IF NOT EXISTS permission (
     resource_name VARCHAR(100) NOT NULL,
     min_role_priority INT NOT NULL DEFAULT 10
 );
-INSERT INTO permission (permission_id, resource_name, min_role_priority)
-VALUES
-    (1, 'user_v1.Create', 10),
-    (2, 'user_v1.Get', 10),
-    (3, 'user_v1.Update', 10),
-    (4, 'user_v1.Delete', 30)
-ON CONFLICT (permission_id) DO NOTHING;
 
 create table auth_user_log (
     id serial primary key,
@@ -45,7 +38,7 @@ create table if not exists auth_user (
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists existspermission;
+drop table if exists permission;
 drop table if exists auth_user;
 drop table if exists auth_user_log;
 drop table if exists user_role;
