@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS permission (
     min_role_priority INT NOT NULL DEFAULT 10
 );
 
-create table auth_user_log (
+CREATE TABLE IF NOT EXISTS auth_user_log (
     id serial primary key,
     name text not null,
     entity_id int null,
@@ -24,7 +24,7 @@ VALUES
     (2, 'admin', 100)
 ON CONFLICT (role_id) DO NOTHING;
 
-create table if not exists auth_user (
+CREATE TABLE IF NOT EXISTS auth_user (
     id serial primary key,
     name text not null,
     email text not null,

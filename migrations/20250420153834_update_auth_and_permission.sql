@@ -22,7 +22,7 @@ BEGIN
         SELECT FROM information_schema.tables
         WHERE table_name = 'auth_user'
     ) THEN
-        CREATE TABLE auth_user (
+        CREATE TABLE IF NOT EXISTS auth_user (
             id serial PRIMARY KEY,
             name text NOT NULL,
             email text NOT NULL,
