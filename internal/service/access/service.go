@@ -2,7 +2,6 @@ package access
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/laiker/auth/internal/repository"
 	"github.com/laiker/auth/internal/service"
@@ -19,8 +18,6 @@ func NewService(repo repository.AccessRepository) service.AccessService {
 }
 
 func (s *accessService) HasAccessRight(ctx context.Context, endpoint string, role string) (bool, error) {
-	fmt.Printf("%v", ctx)
-	fmt.Printf("%v", endpoint)
 	permission, err := s.repo.GetEndpointPermission(ctx, endpoint)
 
 	if err != nil {
@@ -32,7 +29,6 @@ func (s *accessService) HasAccessRight(ctx context.Context, endpoint string, rol
 	if errs != nil {
 		return false, errs
 	}
-	fmt.Printf("%v", mrole)
-	fmt.Printf("%v", permission)
+	
 	return permission.MinPriority <= mrole.Priority, nil
 }

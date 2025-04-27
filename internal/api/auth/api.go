@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/laiker/auth/internal/model"
 	"github.com/laiker/auth/internal/service"
@@ -41,12 +40,11 @@ func (s *ServerAuth) Login(ctx context.Context, req *auth_v1.LoginRequest) (*aut
 		return nil, errors.New("Неверный логин, пароль")
 	}
 
-	fmt.Printf("%+v\n", user)
 	mu := model.UserJwt{
 		UserId: user.Id,
 		Role:   user.Role,
 	}
-	fmt.Printf("%+v\n", mu)
+
 	accessToken, err := s.AuthService.GetAccessToken(ctx, mu)
 
 	if err != nil {

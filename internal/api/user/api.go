@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -39,7 +38,7 @@ func (s *ServerUser) Create(ctx context.Context, request *user_v1.CreateRequest)
 func (s *ServerUser) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.GetResponse, error) {
 
 	user, err := s.UserService.Get(ctx, request.Id)
-	fmt.Println(user, err)
+
 	if err != nil {
 		return nil, err
 	}

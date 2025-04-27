@@ -2,8 +2,10 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"sync"
@@ -17,6 +19,7 @@ import (
 	"github.com/laiker/auth/pkg/auth_v1"
 	"github.com/laiker/auth/pkg/user_v1"
 	_ "github.com/laiker/auth/statik"
+	"github.com/pkg/errors"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"google.golang.org/grpc"
@@ -29,6 +32,7 @@ type App struct {
 	grpcServer      *grpc.Server
 	httpServer      *http.Server
 	swaggerServer   *http.Server
+	logger          *slog.Logger
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -87,6 +91,7 @@ func (a *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		a.initConfig,
 		a.initServiceProvider,
+		a.initLogger,
 		a.initGRPCServer,
 		a.initHTTPServer,
 		a.initSwaggerServer,
@@ -111,6 +116,11 @@ func (a *App) initConfig(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) initLogger(_ context.Context) error {
+	a.logger = a.serviceProvider.Logger()
+	return nil
+}
+
 func (a *App) initServiceProvider(_ context.Context) error {
 	a.serviceProvider = newServiceProvider()
 	return nil
@@ -121,8 +131,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	crds, err := credentials.NewServerTLSFromFile("service.pem", "service.key")
 
 	if err != nil {
-		log.Fatalf("Failed to generate credentials %v", err)
-		return nil
+		return errors.New(fmt.Sprintf("Failed to generate credentials %v", err))
 	}
 
 	a.grpcServer = grpc.NewServer(
@@ -145,8 +154,7 @@ func (a *App) initHTTPServer(ctx context.Context) error {
 	crds, err := credentials.NewClientTLSFromFile("service.pem", "localhost")
 
 	if err != nil {
-		log.Fatalf("Failed to generate credentials %v", err)
-		return nil
+		return errors.New(fmt.Sprintf("Failed to generate credentials %v", err))
 	}
 
 	opts := []grpc.DialOption{
@@ -175,7 +183,7 @@ func (a *App) initHTTPServer(ctx context.Context) error {
 }
 
 func (a *App) runGRPCServer() error {
-	log.Printf("GRPC server is running on %s", a.serviceProvider.GRPCConfig().Address())
+	a.logger.Info(fmt.Sprintf("GRPC server is running on %s", a.serviceProvider.GRPCConfig().Address()))
 
 	list, err := net.Listen("tcp", a.serviceProvider.GRPCConfig().Address())
 	if err != nil {
@@ -191,7 +199,7 @@ func (a *App) runGRPCServer() error {
 }
 
 func (a *App) runHTTPServer() error {
-	log.Printf("HTTP server is running on %s", a.serviceProvider.HTTPConfig().Address())
+	a.logger.Info(fmt.Sprintf("HTTP server is running on %s", a.serviceProvider.HTTPConfig().Address()))
 
 	err := a.httpServer.ListenAndServe()
 	if err != nil {
@@ -221,7 +229,7 @@ func (a *App) initSwaggerServer(_ context.Context) error {
 }
 
 func (a *App) runSwaggerServer() error {
-	log.Printf("Swagger server is running on %s", a.serviceProvider.SwaggerConfig().Address())
+	a.logger.Info(fmt.Sprintf("Swagger server is running on %s", a.serviceProvider.SwaggerConfig().Address()))
 
 	err := a.swaggerServer.ListenAndServe()
 	if err != nil {
@@ -233,7 +241,7 @@ func (a *App) runSwaggerServer() error {
 
 func serveSwaggerFile(path string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Serving swagger file: %s", path)
+		log.Printf("Serving swagger file: %s\n", path)
 
 		statikFs, err := fs.New()
 		if err != nil {
@@ -252,7 +260,7 @@ func serveSwaggerFile(path string) http.HandlerFunc {
 		defer func(file http.File) {
 			err := file.Close()
 			if err != nil {
-
+				log.Printf("Error closing swagger file: %v", err)
 			}
 		}(file)
 

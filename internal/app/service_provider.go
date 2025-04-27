@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"log"
+	"log/slog"
+	"os"
 
 	"github.com/laiker/auth/client/db"
 	"github.com/laiker/auth/client/db/pg"
@@ -20,6 +22,7 @@ import (
 	accessService "github.com/laiker/auth/internal/service/access"
 	authService "github.com/laiker/auth/internal/service/auth"
 	serv "github.com/laiker/auth/internal/service/user"
+	"github.com/lmittmann/tint"
 )
 
 type ServiceProvider struct {
@@ -47,7 +50,10 @@ type ServiceProvider struct {
 	//Database
 	db        db.Client
 	txManager db.TxManager
-	dbLogger  *logger.DBLogger
+
+	//Loggers
+	dbLogger *logger.DBLogger
+	logger   *slog.Logger
 }
 
 func newServiceProvider() *ServiceProvider {
@@ -91,7 +97,8 @@ func (s *ServiceProvider) HTTPConfig() config.HTTPConfig {
 		hConfig, err := env.NewHTTPConfig()
 
 		if err != nil {
-			log.Fatalf("failed to load config: %v", err)
+			s.Logger().Error("failed to load config: %v", err)
+			os.Exit(1)
 		}
 
 		s.httpConfig = hConfig
@@ -121,7 +128,8 @@ func (s *ServiceProvider) DB(ctx context.Context) db.Client {
 	if s.db == nil {
 		p, err := pg.New(ctx, s.PGConfig().DSN())
 		if err != nil {
-			log.Fatalf("failed to connect: %v", err)
+			s.Logger().Error("failed to connect: %v", err)
+			os.Exit(1)
 		}
 
 		s.db = p
@@ -149,7 +157,7 @@ func (s *ServiceProvider) UserRepository(ctx context.Context) repository.UserRep
 
 func (s *ServiceProvider) UserService(ctx context.Context) service.UserService {
 	if s.userService == nil {
-		r := serv.NewService(s.UserRepository(ctx), s.TxManager(ctx), s.DBLogger(ctx))
+		r := serv.NewService(s.UserRepository(ctx), s.TxManager(ctx), *s.DBLogger(ctx))
 		s.userService = r
 	}
 
@@ -176,7 +184,7 @@ func (s *ServiceProvider) UserApi(ctx context.Context) *userApi.ServerUser {
 
 func (s *ServiceProvider) AccessApi(ctx context.Context) *accessApi.ServerAccess {
 	if s.accessApi == nil {
-		a := accessApi.NewAccessServer(s.AuthService(ctx), s.AccessService(ctx))
+		a := accessApi.NewAccessServer(s.AuthService(ctx), s.AccessService(ctx), s.Logger())
 		s.accessApi = a
 	}
 
@@ -195,7 +203,7 @@ func (s *ServiceProvider) AccessService(ctx context.Context) service.AccessServi
 func (s *ServiceProvider) AccessRepository(ctx context.Context) repository.AccessRepository {
 
 	if s.accessRepository == nil {
-		r := accessRepository.NewRepository(s.DB(ctx))
+		r := accessRepository.NewRepository(s.DB(ctx), s.Logger())
 		s.accessRepository = r
 	}
 
@@ -208,7 +216,8 @@ func (s *ServiceProvider) JwtConfig() config.JwtConfig {
 		jwtConfig, err := env.NewJwtConfig()
 
 		if err != nil {
-			log.Fatalf("failed to load config: %v", err)
+			s.Logger().Error("failed to load config: %v", err)
+			os.Exit(1)
 		}
 
 		s.jwtConfig = jwtConfig
@@ -232,9 +241,23 @@ func (s *ServiceProvider) AuthApi(ctx context.Context) *authApi.ServerAuth {
 
 func (s *ServiceProvider) DBLogger(ctx context.Context) *logger.DBLogger {
 	if s.dbLogger == nil {
-		l := logger.NewDBLogger(s.DB(ctx))
+		l := logger.NewDBLogger(s.DB(ctx), s.Logger())
 		s.dbLogger = l
 	}
 
 	return s.dbLogger
+}
+
+func (s *ServiceProvider) Logger() *slog.Logger {
+	if s.logger == nil {
+		color := tint.NewHandler(os.Stdout, &tint.Options{
+			Level:     slog.LevelDebug,
+			AddSource: true,
+		})
+
+		l := logger.InitLogger(color)
+		s.logger = l
+	}
+
+	return s.logger
 }

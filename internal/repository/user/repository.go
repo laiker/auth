@@ -9,6 +9,7 @@ import (
 	"github.com/laiker/auth/client/db"
 	"github.com/laiker/auth/internal/model"
 	"github.com/laiker/auth/internal/repository"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -88,6 +89,10 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 
 	if err != nil {
 		log.Printf("failed to select user: %v\n", err)
+	}
+
+	if user.Id <= 0 {
+		return nil, errors.New("user not found")
 	}
 
 	return &user, nil

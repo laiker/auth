@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/laiker/auth/client/db"
@@ -21,11 +22,12 @@ const (
 
 type accessRepo struct {
 	db db.Client
+	logger *slog.Logger
 }
 
-func NewRepository(db db.Client) repository.AccessRepository {
+func NewRepository(db db.Client, logger *slog.Logger) repository.AccessRepository {
 
-	return &accessRepo{db: db}
+	return &accessRepo{db: db, logger: logger}
 }
 
 func (r *accessRepo) GetEndpointPermission(ctx context.Context, endpoint string) (*model.Permission, error) {

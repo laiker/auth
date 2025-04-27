@@ -2,7 +2,7 @@ package access
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/laiker/auth/internal/service"
@@ -18,15 +18,18 @@ type ServerAccess struct {
 	access_v1.UnimplementedAccessV1Server
 	AuthService   service.AuthService
 	AccessService service.AccessService
+	Logger *slog.Logger
 }
 
 func NewAccessServer(
 	AuthService service.AuthService,
 	AccessService service.AccessService,
+	Logger *slog.Logger,
 ) *ServerAccess {
 	return &ServerAccess{
 		AuthService:   AuthService,
 		AccessService: AccessService,
+		Logger: Logger,
 	}
 }
 
@@ -52,7 +55,7 @@ func (s *ServerAccess) HasAccess(ctx context.Context, req *access_v1.CheckReques
 	if err != nil {
 		return nil, errors.New("access token is invalid")
 	}
-	fmt.Printf("%v", claims.Role)
+
 	hasEndpointAccess, err := s.AccessService.HasAccessRight(ctx, req.EndpointAddress, claims.Role)
 
 	if err != nil {

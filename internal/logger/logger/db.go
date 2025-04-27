@@ -4,24 +4,20 @@ import (
 	"context"
 	_ "context"
 	"log"
+	"log/slog"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/laiker/auth/client/db"
 	"github.com/laiker/auth/internal/logger"
 )
 
-var _ logger.BaseLogger = (*DBLogger)(nil)
-
-type DBLoggerInterface interface {
-	logger.BaseLogger
-}
-
 type DBLogger struct {
+	*slog.Logger
 	db db.Client
 }
 
-func NewDBLogger(db db.Client) *DBLogger {
-	return &DBLogger{db: db}
+func NewDBLogger(db db.Client, logger *slog.Logger) *DBLogger {
+	return &DBLogger{db: db, Logger: logger}
 }
 
 func (l *DBLogger) Log(ctx context.Context, data logger.LogData) error {
@@ -43,10 +39,12 @@ func (l *DBLogger) Log(ctx context.Context, data logger.LogData) error {
 		QueryRaw: query,
 	}
 
+	l.Logger.Info("Database Operation:", data)
+
 	_, err = l.db.DB().ExecContext(ctx, q, args...)
 
 	if err != nil {
-		log.Printf("failed to insert user: %v\n", err)
+		log.Printf("failed to insert log: %v\n", err)
 		return err
 	}
 
