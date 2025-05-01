@@ -80,7 +80,7 @@ local-migration-down:
 	$(LOCAL_BIN)/goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} down -v
 
 start:
-	docker-compose up -d pg-local migrator-local
+	docker-compose up -d pg-local migrator-local prometheus grafana
 	go run cmd/main.go
 
 restart:
@@ -111,3 +111,25 @@ gen-cert:
 	openssl req -new -key service.key -out service.csr -config certificate.conf
 	openssl x509 -req -in service.csr -CA ca.cert -CAkey ca.key -CAcreateserial \
     		-out service.pem -days 365 -sha256 -extfile certificate.conf -extensions req_ext
+
+grpc-load-test:
+	bin/ghz \
+		--proto api/user_v1/user.proto \
+		--call user_v1.UserV1.Get \
+		--data '{"id": 1}' \
+		--rps 100 \
+		--total 3000 \
+		--cert service.pem \
+		--key service.key \
+		--cacert ca.cert \
+		localhost:50052
+
+grpc-error-load-test:
+	bin/ghz \
+		--proto api/auth_v1/auth.proto \
+		--call auth_v1.AuthV1.Get \
+		--data '{"id": 0}' \
+		--rps 100 \
+		--total 3000 \
+		--insecure \
+		localhost:50052

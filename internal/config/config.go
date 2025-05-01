@@ -22,6 +22,10 @@ type SwaggerConfig interface {
 	Address() string
 }
 
+type PrometheusConfig interface {
+	Address() string
+}
+
 type JwtConfig interface {
 	GetAccessSecret() string
 	GetRefreshSecret() string

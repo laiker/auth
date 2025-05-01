@@ -27,11 +27,12 @@ import (
 
 type ServiceProvider struct {
 	//Configs
-	pgConfig      config.PGConfig
-	grpcConfig    config.GRPCConfig
-	jwtConfig     config.JwtConfig
-	httpConfig    config.HTTPConfig
-	swaggerConfig config.SwaggerConfig
+	pgConfig         config.PGConfig
+	grpcConfig       config.GRPCConfig
+	jwtConfig        config.JwtConfig
+	httpConfig       config.HTTPConfig
+	swaggerConfig    config.SwaggerConfig
+	prometheusConfig config.PrometheusConfig
 
 	//User
 	userApi        *userApi.ServerUser
@@ -122,6 +123,22 @@ func (s *ServiceProvider) SwaggerConfig() config.HTTPConfig {
 	}
 
 	return s.swaggerConfig
+}
+
+func (s *ServiceProvider) PrometheusConfig() config.HTTPConfig {
+	if s.prometheusConfig == nil {
+
+		sConfig, err := env.NewPrometheusConfig()
+
+		if err != nil {
+			log.Fatalf("failed to load config: %v", err)
+		}
+
+		s.prometheusConfig = sConfig
+
+	}
+
+	return s.prometheusConfig
 }
 
 func (s *ServiceProvider) DB(ctx context.Context) db.Client {

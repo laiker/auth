@@ -15,11 +15,13 @@ import (
 	"github.com/laiker/auth/internal/closer"
 	"github.com/laiker/auth/internal/config"
 	"github.com/laiker/auth/internal/interceptor"
+	"github.com/laiker/auth/internal/metrics"
 	"github.com/laiker/auth/pkg/access_v1"
 	"github.com/laiker/auth/pkg/auth_v1"
 	"github.com/laiker/auth/pkg/user_v1"
 	_ "github.com/laiker/auth/statik"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"google.golang.org/grpc"
@@ -28,11 +30,12 @@ import (
 )
 
 type App struct {
-	serviceProvider *ServiceProvider
-	grpcServer      *grpc.Server
-	httpServer      *http.Server
-	swaggerServer   *http.Server
-	logger          *slog.Logger
+	serviceProvider  *ServiceProvider
+	grpcServer       *grpc.Server
+	httpServer       *http.Server
+	swaggerServer    *http.Server
+	prometheusServer *http.Server
+	logger           *slog.Logger
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -53,7 +56,7 @@ func (a *App) Run() error {
 	}()
 
 	wg := sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
@@ -82,6 +85,15 @@ func (a *App) Run() error {
 		}
 	}()
 
+	go func() {
+		defer wg.Done()
+
+		err := a.runPrometheusServer()
+		if err != nil {
+			log.Fatalf("failed to run Prometheus server: %v", err)
+		}
+	}()
+
 	wg.Wait()
 
 	return nil
@@ -95,6 +107,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initGRPCServer,
 		a.initHTTPServer,
 		a.initSwaggerServer,
+		a.initPrometheusServer,
 	}
 
 	for _, f := range inits {
@@ -136,7 +149,10 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(crds),
-		grpc.UnaryInterceptor(interceptor.ValidateInterceptor()),
+		grpc.ChainUnaryInterceptor(
+			interceptor.ValidateInterceptor(),
+			interceptor.MetricsInterceptor(),
+		),
 	)
 
 	reflection.Register(a.grpcServer)
@@ -232,6 +248,34 @@ func (a *App) runSwaggerServer() error {
 	a.logger.Info(fmt.Sprintf("Swagger server is running on %s", a.serviceProvider.SwaggerConfig().Address()))
 
 	err := a.swaggerServer.ListenAndServe()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *App) initPrometheusServer(ctx context.Context) error {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+	err := metrics.Init(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	a.prometheusServer = &http.Server{
+		Addr:    a.serviceProvider.PrometheusConfig().Address(),
+		Handler: mux,
+	}
+
+	return nil
+}
+
+func (a *App) runPrometheusServer() error {
+	a.logger.Info(fmt.Sprintf("Prometerus server is running on %s", a.serviceProvider.PrometheusConfig().Address()))
+
+	err := a.prometheusServer.ListenAndServe()
 	if err != nil {
 		return err
 	}

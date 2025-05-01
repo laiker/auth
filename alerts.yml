@@ -1,0 +1,11 @@
+groups:
+- name: alerts
+  rules:
+  - alert: TargetIsDown
+    expr: up == 0
+    for: 30s
+    labels:
+      severity: medium
+    annotations:
+      summary: "Сервис  {{ $labels.job }} отключен"
+      description: "Сервис {{ $labels.instance }} воркера {{ $labels.job }} не отвечает в течении 30 секунд."
