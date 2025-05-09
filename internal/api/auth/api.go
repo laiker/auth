@@ -41,8 +41,9 @@ func (s *ServerAuth) Login(ctx context.Context, req *auth_v1.LoginRequest) (*aut
 	}
 
 	mu := model.UserJwt{
-		UserId: user.Id,
-		Role:   user.Role,
+		UserId:    user.Id,
+		UserLogin: user.Name,
+		Role:      user.Role,
 	}
 
 	accessToken, err := s.AuthService.GetAccessToken(ctx, mu)

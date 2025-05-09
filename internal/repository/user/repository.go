@@ -124,7 +124,7 @@ func (r *repo) GetByEmail(ctx context.Context, email string) (*model.User, error
 
 	if err != nil {
 		log.Printf("failed to select user: %v\n", err)
-		return nil, err
+		return nil, errors.New("Пользователь не найден")
 	}
 
 	return &user, nil
