@@ -26,6 +26,7 @@ func GenerateToken(info model.UserJwt, secretKey []byte, duration time.Duration)
 }
 
 func VerifyToken(tokenStr string, secretKey []byte) (*model.UserClaims, error) {
+
 	token, err := jwt.ParseWithClaims(
 		tokenStr,
 		&model.UserClaims{},

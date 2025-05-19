@@ -58,6 +58,37 @@
         ]
       }
     },
+    "/user/v1/find/{name}": {
+      "get": {
+        "summary": "Поиск пользователя по логину",
+        "operationId": "UserV1_FindByLogin",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/user_v1FindByLoginResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserV1"
+        ]
+      }
+    },
     "/user/v1/{id}": {
       "get": {
         "summary": "Получение пользователя по ID",
@@ -230,6 +261,18 @@
         }
       }
     },
+    "user_v1FindByLoginResponse": {
+      "type": "object",
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/user_v1UserSearchItem"
+          }
+        }
+      }
+    },
     "user_v1GetResponse": {
       "type": "object",
       "properties": {
@@ -265,6 +308,18 @@
       "default": "USER",
       "description": "- USER: Пользователь\n - ADMIN: Админ",
       "title": "Роль пользователя"
+    },
+    "user_v1UserSearchItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
     }
   }
 }

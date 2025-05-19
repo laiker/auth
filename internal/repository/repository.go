@@ -12,6 +12,7 @@ type UserRepository interface {
 	Delete(ctx context.Context, id int64) error
 	Update(ctx context.Context, info *model.User) error
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	FindByName(ctx context.Context, name string) ([]*model.UserName, error)
 }
 
 type AccessRepository interface {

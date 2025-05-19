@@ -67,15 +67,23 @@ func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, err
 
 func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 
-	sBuilder := sq.Select(idColumn, nameColumn, emailColumn, roleColumn, createdAtColumn, updatedAtColumn).
+	sBuilder := sq.Select(
+		tableName+"."+idColumn,
+		tableName+"."+nameColumn,
+		tableName+"."+emailColumn,
+		"user_role.role_name as role",
+		tableName+"."+createdAtColumn,
+		tableName+"."+updatedAtColumn).
 		From(tableName).
-		Where(sq.Eq{idColumn: id}).
+		Join("user_role on " + tableName + ".role_id = user_role.role_id").
+		Where(sq.Eq{tableName + "." + idColumn: id}).
 		PlaceholderFormat(sq.Dollar)
 
 	query, args, err := sBuilder.ToSql()
 
 	if err != nil {
 		log.Printf("failed to build query: %v\n", err)
+		return nil, err
 	}
 
 	q := db.Query{
@@ -89,6 +97,7 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 
 	if err != nil {
 		log.Printf("failed to select user: %v\n", err)
+		return nil, errors.New("Пользователь не найден")
 	}
 
 	if user.Id <= 0 {
@@ -100,7 +109,13 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 
 func (r *repo) GetByEmail(ctx context.Context, email string) (*model.User, error) {
 
-	sBuilder := sq.Select(idColumn, nameColumn, emailColumn, "role_name as role", passwordColumn).
+	sBuilder := sq.Select(
+		tableName+"."+idColumn,
+		tableName+"."+nameColumn,
+		tableName+"."+emailColumn,
+		"user_role.role_name as role",
+		tableName+"."+passwordColumn,
+	).
 		From(tableName).
 		Where(sq.Eq{emailColumn: email}).
 		Join("user_role on auth_user.role_id = user_role.role_id").
@@ -130,6 +145,39 @@ func (r *repo) GetByEmail(ctx context.Context, email string) (*model.User, error
 	return &user, nil
 }
 
+func (r *repo) FindByName(ctx context.Context, name string) ([]*model.UserName, error) {
+
+	sBuilder := sq.Select(
+		tableName+"."+idColumn,
+		tableName+"."+nameColumn,
+	).
+		From(tableName).
+		Where(sq.ILike{nameColumn: "%" + name + "%"}).
+		PlaceholderFormat(sq.Dollar)
+
+	query, args, err := sBuilder.ToSql()
+
+	if err != nil {
+		log.Printf("failed to build query: %v\n", err)
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "user.FindByName",
+		QueryRaw: query,
+	}
+
+	users := make([]*model.UserName, 0)
+
+	err = r.db.DB().ScanAllContext(ctx, &users, q, args...)
+
+	if err != nil {
+		log.Printf("failed to select user: %v\n", err)
+		return nil, errors.New("Пользователь не найден")
+	}
+
+	return users, nil
+}
 func (r *repo) Delete(ctx context.Context, id int64) error {
 
 	sBuilder := sq.Delete(tableName).

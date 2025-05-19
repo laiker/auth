@@ -76,3 +76,7 @@ func (s *serv) Delete(ctx context.Context, id int64) error {
 func (s *serv) Update(ctx context.Context, info *model.User) error {
 	return s.repo.Update(ctx, info)
 }
+
+func (s *serv) FindByName(ctx context.Context, name string) ([]*model.UserName, error) {
+	return s.repo.FindByName(ctx, name)
+}

@@ -22,3 +22,8 @@ type User struct {
 	UpdatedAt sql.NullTime
 	CreatedAt time.Time
 }
+
+type UserName struct {
+	Id   int64
+	Name string
+}

@@ -29,6 +29,6 @@ func (s *accessService) HasAccessRight(ctx context.Context, endpoint string, rol
 	if errs != nil {
 		return false, errs
 	}
-	
+
 	return permission.MinPriority <= mrole.Priority, nil
 }

@@ -74,3 +74,24 @@ func (s *ServerUser) Delete(ctx context.Context, request *user_v1.DeleteRequest)
 
 	return &empty.Empty{}, nil
 }
+
+func (s *ServerUser) FindByLogin(ctx context.Context, request *user_v1.FindByLoginRequest) (*user_v1.FindByLoginResponse, error) {
+	users, err := s.UserService.FindByName(ctx, request.GetName())
+
+	if err != nil {
+		log.Fatalf("failed to find users: %v", err)
+	}
+
+	userList := make([]*user_v1.UserSearchItem, len(users))
+
+	for k, user := range users {
+		userList[k] = &user_v1.UserSearchItem{
+			Id:   user.Id,
+			Name: user.Name,
+		}
+	}
+
+	return &user_v1.FindByLoginResponse{
+		Results: userList,
+	}, nil
+}

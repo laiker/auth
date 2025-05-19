@@ -18,7 +18,7 @@ type ServerAccess struct {
 	access_v1.UnimplementedAccessV1Server
 	AuthService   service.AuthService
 	AccessService service.AccessService
-	Logger *slog.Logger
+	Logger        *slog.Logger
 }
 
 func NewAccessServer(
@@ -29,7 +29,7 @@ func NewAccessServer(
 	return &ServerAccess{
 		AuthService:   AuthService,
 		AccessService: AccessService,
-		Logger: Logger,
+		Logger:        Logger,
 	}
 }
 

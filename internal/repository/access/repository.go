@@ -21,7 +21,7 @@ const (
 )
 
 type accessRepo struct {
-	db db.Client
+	db     db.Client
 	logger *slog.Logger
 }
 
